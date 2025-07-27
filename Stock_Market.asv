@@ -1,0 +1,39 @@
+%Stock market price prediction
+
+%Load stock data
+stock_ticker='GOOG';
+endDate=datetime('today');
+%getting daat for the last 10 years
+startDate=endDate-calyears(10);
+%converts dates to unix epoch time for the url
+startUnix=posixtime(startDate);
+endUnix=posixtime(endDate);
+%construct the URL for downloading data from yahoo finance
+url=sprintf('https://query1.finance.yahoo.com/v7/finance/download/%s?period1=%.0f&period2=%.0f&interval=1d&events=history&includeAdjustedClose=true', ...
+              ticker,startUnix,endUnix);
+filename='stockdata.csv';
+%Downloading the data
+try
+    websave(filename,url);
+    fprintf('Successfully downloaded stock data for %s.\n',ticker);
+catch ME
+    fprintf('Error downloading stock data:%s\n',ME.message);
+    fprintf('Please check the ticker symbol & your internet connection.\n');
+    return;
+end
+%read the data in to a table & create a timetable
+opts=detectImportOptions(filename);
+opts=setvartype(opts,'Date','datetime');
+data=readtable(filename,opts);
+stockData=table2timetable(data(:,{'Date','Close'}));
+%Clean up the downloaded file
+delete(filename);
+%visualize the data
+figure;
+plot(stockData.Date,stockData.Close);
+title(['Historical Closing Prices for',ticker]);
+
+
+
+
+
